@@ -1,0 +1,427 @@
+# TasteGraph Data Model
+
+## 1. User
+
+```json
+{
+  "id": "user_123",
+  "name": "Toby",
+  "email": "toby@example.com",
+  "home_city": "San Francisco",
+  "default_recommendation_min_rating": 4,
+  "created_at": "2026-06-24T00:00:00Z",
+  "updated_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 2. Experience
+
+Primary record for every restaurant, event, concert, hotel, park, or outing.
+
+```json
+{
+  "id": "exp_123",
+  "user_id": "user_123",
+  "venue_id": "venue_456",
+  "city_id": "city_sf",
+  "category": "restaurant",
+  "subcategory": "mexican",
+  "title": "Dinner at Nopalito",
+  "visit_start": "2026-06-21T19:00:00Z",
+  "visit_end": "2026-06-21T21:00:00Z",
+  "detected_from": ["calendar", "location", "receipt"],
+  "companions": ["person_wife", "person_friend_1"],
+  "occasion": "date_night",
+  "mood": ["casual", "fun", "social"],
+  "summary": "Great tacos and cocktails. Music was a little loud.",
+  "highlights": ["tacos", "cocktails", "outdoor seating"],
+  "complaints": ["music too loud"],
+  "overall_rating": 4,
+  "would_return": true,
+  "recommendation_confidence": 0.91,
+  "visibility": "private",
+  "embedding_id": "emb_exp_123",
+  "created_at": "2026-06-24T00:00:00Z",
+  "updated_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 3. Venue
+
+Canonical record for a place.
+
+```json
+{
+  "id": "venue_456",
+  "name": "Nopalito",
+  "category": "restaurant",
+  "subcategory": "mexican",
+  "address": "306 Broderick St",
+  "city_id": "city_sf",
+  "state": "CA",
+  "country": "USA",
+  "latitude": 37.7749,
+  "longitude": -122.4194,
+  "price_level": "$$",
+  "website": "https://example.com",
+  "phone": "+1-555-555-5555",
+  "tags": ["mexican", "tacos", "cocktails", "outdoor_seating"],
+  "metadata": {
+    "reservation_needed": true,
+    "parking": "street",
+    "kid_friendly": true,
+    "dog_friendly": false,
+    "accessibility": "unknown"
+  },
+  "created_at": "2026-06-24T00:00:00Z",
+  "updated_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 4. City
+
+```json
+{
+  "id": "city_sf",
+  "name": "San Francisco",
+  "state": "CA",
+  "country": "USA",
+  "timezone": "America/Los_Angeles",
+  "tags": ["food", "parks", "waterfront", "coffee", "culture"],
+  "summary": "Strong food, coffee, waterfront, parks, and family-friendly experiences.",
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 5. Rating
+
+Separate table so ratings can evolve over time.
+
+```json
+{
+  "id": "rating_123",
+  "experience_id": "exp_123",
+  "user_id": "user_123",
+  "overall_rating": 4,
+  "food_rating": 5,
+  "service_rating": 3,
+  "ambience_rating": 4,
+  "value_rating": 4,
+  "return_rating": 4,
+  "notes": "Loved the food, but a little loud.",
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 6. Preference
+
+Learned user taste signals.
+
+```json
+{
+  "id": "pref_123",
+  "user_id": "user_123",
+  "preference_type": "positive",
+  "entity_type": "attribute",
+  "entity_value": "outdoor_seating",
+  "weight": 0.87,
+  "confidence": 0.92,
+  "evidence_count": 14,
+  "source_experience_ids": ["exp_123", "exp_456"],
+  "last_observed_at": "2026-06-21T00:00:00Z"
+}
+```
+
+Examples:
+
+```json
+[
+  "quiet_restaurants",
+  "waterfront",
+  "craft_cocktails",
+  "family_friendly",
+  "walkable_neighborhoods",
+  "live_music",
+  "small_venues"
+]
+```
+
+---
+
+## 7. Companion / Person
+
+People the user experiences places with or recommends to.
+
+```json
+{
+  "id": "person_123",
+  "user_id": "user_123",
+  "name": "Mom",
+  "relationship": "family",
+  "known_preferences": ["seafood", "museums", "gardens"],
+  "known_avoidances": ["loud_bars", "long_walks"],
+  "dietary_restrictions": [],
+  "accessibility_needs": [],
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 8. Experience Companion Join
+
+```json
+{
+  "id": "exp_comp_123",
+  "experience_id": "exp_123",
+  "person_id": "person_123",
+  "role": "attendee",
+  "person_feedback": "liked_it",
+  "person_rating": 5
+}
+```
+
+---
+
+## 9. Recommendation Request
+
+Every time someone asks for suggestions.
+
+```json
+{
+  "id": "req_123",
+  "user_id": "user_123",
+  "recipient_person_id": "person_mom",
+  "city_id": "city_sf",
+  "intent": "quiet seafood dinner with a view",
+  "experience_type": "restaurant",
+  "constraints": {
+    "min_rating": 4,
+    "price_level": "$$$",
+    "kid_friendly": false,
+    "walkable": true,
+    "dietary": ["seafood"],
+    "avoid": ["loud", "touristy"]
+  },
+  "status": "completed",
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 10. Recommendation Result
+
+```json
+{
+  "id": "rec_123",
+  "request_id": "req_123",
+  "experience_id": "exp_123",
+  "venue_id": "venue_456",
+  "rank": 1,
+  "score": 0.96,
+  "reason": "Rated 5 stars, quiet atmosphere, strong seafood, good waterfront views.",
+  "matched_signals": [
+    "5_star",
+    "seafood",
+    "quiet",
+    "waterfront",
+    "good_for_parents"
+  ],
+  "shared": true,
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 11. Recommendation Feedback
+
+```json
+{
+  "id": "rec_feedback_123",
+  "recommendation_id": "rec_123",
+  "recipient_person_id": "person_mom",
+  "feedback": "loved_it",
+  "rating": 5,
+  "notes": "Mom loved the view and quiet atmosphere.",
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 12. Share Session
+
+For shared links or temporary friend/family agents.
+
+```json
+{
+  "id": "share_123",
+  "user_id": "user_123",
+  "recipient_person_id": "person_mom",
+  "city_id": "city_sf",
+  "access_level": "recommendations_only",
+  "min_rating": 4,
+  "expires_at": "2026-07-24T00:00:00Z",
+  "share_url": "https://tastegraph.ai/share/share_123",
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 13. Agent Memory
+
+Stored in ZeroMemory.
+
+```json
+{
+  "id": "memory_123",
+  "user_id": "user_123",
+  "memory_type": "taste_preference",
+  "content": "User prefers quiet restaurants with outdoor seating and strong cocktails.",
+  "source_type": "experience",
+  "source_id": "exp_123",
+  "confidence": 0.88,
+  "importance": 0.9,
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 14. Embedding Record
+
+Stored in ZeroDB vector index.
+
+```json
+{
+  "id": "emb_exp_123",
+  "entity_type": "experience",
+  "entity_id": "exp_123",
+  "user_id": "user_123",
+  "embedding_text": "Great Mexican dinner with tacos, cocktails, outdoor seating, loud music, date night.",
+  "embedding_vector": [0.012, -0.882, 0.441],
+  "metadata": {
+    "city": "San Francisco",
+    "category": "restaurant",
+    "rating": 4,
+    "occasion": "date_night"
+  },
+  "created_at": "2026-06-24T00:00:00Z"
+}
+```
+
+---
+
+## 15. Knowledge Graph Edge
+
+```json
+{
+  "id": "edge_123",
+  "source_id": "user_123",
+  "source_type": "user",
+  "relationship": "LIKES",
+  "target_id": "outdoor_seating",
+  "target_type": "attribute",
+  "weight": 0.87,
+  "confidence": 0.92,
+  "evidence": ["exp_123", "exp_456"]
+}
+```
+
+Example graph relationships:
+
+```txt
+User → VISITED → Venue
+User → LIKES → Cuisine
+User → DISLIKES → Attribute
+Experience → OCCURRED_IN → City
+Experience → INCLUDED → Companion
+Venue → HAS_TAG → Outdoor Seating
+Recommendation → SUGGESTED_TO → Person
+Person → PREFERS → Seafood
+```
+
+---
+
+# Recommended Core Tables
+
+```txt
+users
+cities
+venues
+experiences
+ratings
+preferences
+people
+experience_companions
+recommendation_requests
+recommendation_results
+recommendation_feedback
+share_sessions
+agent_memories
+embeddings
+knowledge_graph_edges
+```
+
+---
+
+# Default Recommendation Query Logic
+
+```sql
+SELECT *
+FROM experiences
+WHERE user_id = :user_id
+AND city_id = :city_id
+AND overall_rating >= 4
+AND category = :category
+ORDER BY recommendation_confidence DESC, overall_rating DESC;
+```
+
+For semantic search:
+
+```txt
+Filter:
+- user_id
+- city
+- category
+- rating >= 4
+
+Vector search:
+- match intent
+- match recipient profile
+- match occasion
+- avoid negative preferences
+```
+
+---
+
+# MVP Data Model
+
+For the first version, only build these:
+
+```txt
+users
+venues
+experiences
+ratings
+preferences
+people
+recommendation_requests
+recommendation_results
+embeddings
+```
+
+That is enough to launch the agent.
